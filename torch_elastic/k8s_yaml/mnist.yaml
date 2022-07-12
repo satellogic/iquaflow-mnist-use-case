@@ -1,0 +1,49 @@
+apiVersion: elastic.pytorch.org/v1alpha1
+kind: ElasticJob
+metadata:
+  name: mnist-cloud-distr
+  namespace: elastic-job
+spec:
+  # Use "etcd-service:2379" if you already apply etcd.yaml
+  # rdzvEndpoint: "172.20.112.197:2379"
+  rdzvEndpoint: "etcd-service:2379"
+  minReplicas: 1
+  maxReplicas: 6
+  replicaSpecs:
+    Worker:
+      replicas: 3
+      restartPolicy: ExitCode
+      template:
+        apiVersion: v1
+        kind: Pod
+        spec:
+          containers:
+            - name: cd-torch-elastic-worker-cu
+              env:
+                - name: MAX_LEN
+                  value: "100"
+              image: 128302422932.dkr.ecr.eu-west-1.amazonaws.com/cloud-detector-torch-elastic:cu11.4
+              imagePullPolicy: Always
+              # command: 
+              #   - "torchrun"
+              args:
+                - "--nnodes=1"
+                - "--nproc_per_node=4"
+                - "torch_elastic/train.py"
+                - "--gpus=0,1,2,3"
+                - "--n_gpus=4"
+                - "--n_epochs=1"
+                - "--threads=4"
+                - "--batch_sz=6000"
+                - "--dist-backend=gloo"
+                # number of data loader workers (NOT trainers)
+                # zero means load the data on the same process as the trainer
+                # this is set so that the container does not OOM since
+                # pytorch data loaders use shm
+                # - "--workers=0"
+              resources:
+                limits:
+                  nvidia.com/gpu: 4
+          serviceAccountName: elastic-job
+          nodeSelector: 
+            worker-node: ml-gpu-g4-12xl
