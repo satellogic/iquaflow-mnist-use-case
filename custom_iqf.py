@@ -13,13 +13,13 @@ class CustomNoiseModifier(DSModifier_dir):
     def __init__(
        self,
        ds_modifier = None,
-       params = {"variance": 256*10},
+       params = {"sigma": 256*10},
     ):
-        sufix = str(params['variance'])
+        sufix = str(params['sigma'])
         self.name = f"noise_{sufix}"
         self.params: Dict[str, Any] = params
         self.ds_modifier = ds_modifier
         self.params.update({"modifier": "{}".format(self._get_name())})
 
     def _mod_img(self, img):
-        return add_noise( img, mean=0, var=self.params['variance'] )
+        return add_noise( img, mean=0, var=self.params['sigma'] )

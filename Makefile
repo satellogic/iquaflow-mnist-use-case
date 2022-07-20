@@ -1,4 +1,4 @@
-PROJ_NAME=iq-mnist-use-case
+PROJ_NAME=iquaflow
 CONTAINER_NAME="${PROJ_NAME}-${USER}"
 
 
