@@ -23,15 +23,17 @@ class CustomDataset(Dataset):
     def __init__(
         self,
         root_dir= "mnist_png/training",
+        seed=123,
+        perc=0.01
     ):
         self.root_dir = root_dir
         fn_lst = glob.glob(os.path.join(root_dir,'images','*.png'))
 
         # use only 10% of the data
-        random.seed(123)
+        random.seed(seed)
         random.shuffle(fn_lst)
 
-        self.fn_lst = fn_lst[:int(len(fn_lst)*0.1)]
+        self.fn_lst = fn_lst[:int(len(fn_lst)*perc)]
     
         with open(os.path.join(root_dir,'annotations.json')) as json_file:
             self.annotjson = json.load(json_file)
@@ -41,7 +43,7 @@ class CustomDataset(Dataset):
     
     def __getitem__( self, ii ):
         
-        arr = np.transpose( cv2.imread(self.fn_lst[ii]), [2,0,1] )
+        arr = np.transpose( cv2.imread(self.fn_lst[ii]), [2,0,1] )/255
         
         img_json = [
             ij for ij in self.annotjson['images']
@@ -73,15 +75,17 @@ class CustomDataset(Dataset):
 def get_dataloader(
     ds_dir = "mnist_png",
     batch_size=8,
-    num_workers=1
+    num_workers=1,
+    perc=0.01,
+    seed=123
 ):
-    dataset = CustomDataset(root_dir = ds_dir)
+    dataset = CustomDataset(root_dir = ds_dir, perc=perc, seed=seed)
     
     dataloader = DataLoader(
         dataset,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=num_workers
+        num_workers=num_workers,
     )
 
     return dataloader
@@ -230,7 +234,8 @@ if __name__ == '__main__':
     parser.add_argument('--valds', type=str, default='./course_data/mnist_png/validation', help='validation dataset path')
     parser.add_argument('--outputpath', type=str, default='./course_data', help='json config file')
     parser.add_argument('--batch_sz', type=int, default=64, help='batch_sz')
-    parser.add_argument('--n_epochs', type=int, default=1, help='n_epochs')
+    parser.add_argument('--seed', type=int, default=123, help='seed')
+    parser.add_argument('--n_epochs', type=int, default=15, help='n_epochs')
     parser.add_argument('--num_workers', type=int, default=1, help='num_workers')
     parser.add_argument('--learning_rate', type=float, default=0.01, help='learning_rate')
     
@@ -241,13 +246,16 @@ if __name__ == '__main__':
     train_dataloader = get_dataloader(
         ds_dir       = opt.trainds,
         batch_size   = opt.batch_sz,
-        num_workers  = opt.num_workers
+        num_workers  = opt.num_workers,
+        perc=0.1,
+        seed = opt.seed
     )
     
     vali_dataloader = get_dataloader(
         ds_dir      = opt.valds,
         batch_size  = opt.batch_sz,
-        num_workers = opt.num_workers
+        num_workers = opt.num_workers,
+        perc=0.1
     )
     
     print('Building model...')
@@ -280,6 +288,7 @@ if __name__ == '__main__':
     results['batch_sz']      = opt.batch_sz
     results['n_epochs']      = opt.n_epochs
     results['learning_rate'] = opt.learning_rate
+    results['learning_rate'] = opt.seed
     
     with open(os.path.join(opt.outputpath,'results.json'), 'w') as outfile:
         json.dump(results, outfile)

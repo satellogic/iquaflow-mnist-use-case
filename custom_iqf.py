@@ -2,18 +2,18 @@ import numpy as np
 
 from iquaflow.datasets import DSModifier_dir
 
-def add_noise( img, mean=0, var=0.1 ):
+def add_noise( img, mean=0, sigma=0.1 ):
     """This function adds noise to an array"""
     row,col= img.shape
-    noise = np.random.normal(mean,var**0.5,(row,col))
-    return img + noise.reshape(row,col)
+    noise = np.random.normal(mean,sigma,(row,col))
+    return np.clip( img + noise.reshape(row,col), 0, 1)
 
 class CustomNoiseModifier(DSModifier_dir):
     
     def __init__(
        self,
        ds_modifier = None,
-       params = {"sigma": 256*10},
+       params = {"sigma": 10},
     ):
         sufix = str(params['sigma'])
         self.name = f"noise_{sufix}"
@@ -22,4 +22,4 @@ class CustomNoiseModifier(DSModifier_dir):
         self.params.update({"modifier": "{}".format(self._get_name())})
 
     def _mod_img(self, img):
-        return add_noise( img, mean=0, var=self.params['sigma'] )
+        return 255*add_noise( img/255, mean=0, sigma=self.params['sigma'] )

@@ -24,7 +24,10 @@ python_ml_script_path = 'custom_train.py'
 
 ds_modifiers_list = [
     CustomNoiseModifier(params = {"sigma": 1*f})
-    for f in [0,0.5,1,2,4,8,16,32]
+    for f in [
+    0.5,1,2,4,8,16,
+    .2,.3,.4,.6,.7,.8,.9,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9
+    ]
 ]
 
 # Task execution executes the training loop
@@ -39,7 +42,12 @@ experiment = ExperimentSetup(
     ref_dsw_train     = ds_wrapper_train,
     ref_dsw_val       = ds_wrapper_valid,
     ds_modifiers_list = ds_modifiers_list,
-    repetitions       = 1
+    repetitions       = 1,
+    extra_train_params= {'seed':[
+            8189,56,263,869,
+            5582,467,6169,4996,4623,145,785,54698
+        ]
+    }
 )
 
 #Execute the experiment
